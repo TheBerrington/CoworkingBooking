@@ -14,8 +14,6 @@ import ru.berrington.coworkingspace.util.exceptions.BookingNotCreatedException;
 import ru.berrington.coworkingspace.util.exceptions.BookingNotFoundException;
 import ru.berrington.coworkingspace.util.exceptions.BookingNotUpdatedException;
 
-import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -106,31 +104,4 @@ public class BookingsController {
         bookingService.delete(id);
         return ResponseEntity.ok(HttpStatus.OK);
     }
-
-    @GetMapping("/freeslots/{id}")
-    public List<BookingDTO> getAllFreeBookings(@PathVariable("id") long id) {
-        List<BookingDTO> freeSlots = getFreeSlots(id);
-        List<BookingDTO> bookedSlots = bookingService.findAll().stream().map(b -> bookingService.convertToBookingDTO(b)).collect(Collectors.toList());
-
-    }
-
-    public List<BookingDTO> getFreeSlots(Long id) {
-        LocalDateTime currentTime = LocalDateTime.now();
-        LocalDateTime pointTime;
-        if (currentTime.getMinute() <= 30) {
-            pointTime = LocalDateTime.of(currentTime.getYear(), currentTime.getMonth(), currentTime.getDayOfMonth(),
-                    currentTime.getHour(),30, 0);
-        }else{
-        pointTime = LocalDateTime.of(currentTime.getYear(), currentTime.getMonth(), currentTime.getDayOfMonth(),
-                currentTime.getHour(), 0, 0).plusHours(1);
-    }
-
-    List<BookingDTO> slotForReservation = new ArrayList<>();
-        slotForReservation.add(new BookingDTO(null, pointTime, pointTime.plusMinutes(30), roomService.findById(id).orElse(null)));
-        for (int i = 0; i < 336; i++) {
-            slotForReservation.add(new BookingDTO(null, pointTime.plusMinutes(30*i), pointTime.plusMinutes(30*i+30), roomService.findById(id).orElse(null)));
-        }
-        return slotForReservation;
-    }
-
 }

@@ -9,7 +9,6 @@ import ru.berrington.coworkingspace.models.Room;
 
 import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
-import java.util.Comparator;
 
 @Setter
 @Getter
@@ -20,20 +19,12 @@ public class BookingDTO {
 
     @NotNull
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm")
-    private LocalDateTime startDate;
+    private LocalDateTime startTime;
 
     @NotNull
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm")
-    private LocalDateTime endDate;
+    private LocalDateTime endTime;
 
     private Room room;
 
-}
-
-class startAndEndTimeComparator implements Comparator<BookingDTO>{
-    
-    @Override
-    public int compare(BookingDTO bookingDTO1, BookingDTO bookingDTO2) {
-        return bookingDTO1.getStartDate()
-    }
 }

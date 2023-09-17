@@ -31,6 +31,9 @@ public class RoomService {
         return roomRepository.findById(id);
     }
     public List<Room> findAll(){ return roomRepository.findAll(); }
+    public List<Room> findAllWithCapacity(int capacity){
+        return roomRepository.findByCapacityGreaterThan(capacity);
+    }
 
     public void update(long id, Room updatingRoom){
         updatingRoom.setId(id);

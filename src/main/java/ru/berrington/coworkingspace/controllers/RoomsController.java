@@ -1,18 +1,23 @@
 package ru.berrington.coworkingspace.controllers;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
+import ru.berrington.coworkingspace.dto.BookingDTO;
 import ru.berrington.coworkingspace.dto.RoomDTO;
+import ru.berrington.coworkingspace.models.Room;
+import ru.berrington.coworkingspace.services.BookingService;
 import ru.berrington.coworkingspace.services.RoomService;
 import ru.berrington.coworkingspace.util.exceptions.RoomErrorResponse;
 import ru.berrington.coworkingspace.util.exceptions.RoomNotCreatedException;
 import ru.berrington.coworkingspace.util.exceptions.RoomNotFoundException;
 import ru.berrington.coworkingspace.util.exceptions.RoomNotUpdatedException;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -22,6 +27,7 @@ import java.util.stream.Collectors;
 public class RoomsController {
 
     private final RoomService roomService;
+    private final BookingService bookingService;
 
     @GetMapping()
     public List<RoomDTO> getAllRooms(){
@@ -101,6 +107,28 @@ public class RoomsController {
     public ResponseEntity<HttpStatus> delete(@PathVariable("id") long id) {
         roomService.delete(id);
         return ResponseEntity.ok(HttpStatus.OK);
+    }
+
+
+    @GetMapping("/free")
+    public List<RoomDTO> getAllFreeRooms(@RequestParam(value = "capacity", required = false) Integer capacity,
+                                               @RequestParam(value = "startTime") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm") LocalDateTime startTime,
+                                               @RequestParam(value = "endTime") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm") LocalDateTime endTime) {
+        List<Room> freeRooms;
+        if(capacity != null){
+            freeRooms = roomService.findAllWithCapacity(capacity);
+        } else{
+            freeRooms = roomService.findAll();
+        }
+
+        List<BookingDTO> bookedSlots = bookingService.findAll().stream().map(b
+                -> bookingService.convertToBookingDTO(b)).collect(Collectors.toList());
+        for(BookingDTO b: bookedSlots){
+            if(((startTime.isEqual(b.getStartTime()) || startTime.isAfter(b.getStartTime())) && startTime.isBefore(b.getEndTime())) || ((endTime.isEqual(b.getEndTime()) || endTime.isBefore(b.getEndTime())) && endTime.isAfter(b.getStartTime()))){
+                freeRooms.removeIf(room -> room.getId() == b.getRoom().getId());
+            }
+        }
+        return freeRooms.stream().map(b -> roomService.convertToRoomDTO(b)).collect(Collectors.toList());
     }
 
 
